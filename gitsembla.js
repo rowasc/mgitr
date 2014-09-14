@@ -1,16 +1,5 @@
-$(document).ready(function(){
-    window['gitsembla']= {};
-    window['gitsembla'].userSettings = new UserSettings();
-
-    gitsembla.userSettings.getIdentifier(gitsembla.userSettings.getSecret);
-
-    if (gitsembla.userSettings.isIdentified()!==true){
-        var assemblaForm = new View("assembla_form.html", "#container", AssemblaForm);
-        assemblaForm.load();
-    }else{
-        new SpaceList();
-    }
-});
+window['gitsembla']= {};
+gitsembla["localScope"]={};
 /**
  *
  * A simple wrapper for an ajax call with assembla headers for auth preloaded
@@ -19,7 +8,7 @@ $(document).ready(function(){
  * @param callback
  * @constructor
  */
-var GitsemblaRequest = function (url, method, callback){
+gitsembla.localScope["GitsemblaRequest"]= function (url, method, callback){
     $.ajax({
         url: url,
         xhrFields: {
@@ -33,7 +22,8 @@ var GitsemblaRequest = function (url, method, callback){
         callback(data);
     });
 };
-var Space = function(data){
+gitsembla.localScope["Space"] = function(data){
+
     var self=this;
     this.id=data.id;
     this.name = data.name;
@@ -48,7 +38,7 @@ var Space = function(data){
 
     };
     this.getTools= function(){
-        new GitsemblaRequest("https://api.assembla.com/v1/spaces/"+self.id+"/space_tools.json", "GET", self.setTools);
+        new gitsembla.localScope.GitsemblaRequest("https://api.assembla.com/v1/spaces/"+self.id+"/space_tools.json", "GET", self.setTools);
     };
 
     this.setTools =function(data){
@@ -65,7 +55,7 @@ var Space = function(data){
             return tool.type==="GitTool";
         });
         _.each(git_tools, function(tool){
-            new GitsemblaRequest("https://api.assembla.com/v1/spaces/"+self.id+"/space_tools/"+tool.id+"/merge_requests.json?status=open", "GET", self.setMergeRequests);
+            new gitsembla.localScope.GitsemblaRequest("https://api.assembla.com/v1/spaces/"+self.id+"/space_tools/"+tool.id+"/merge_requests.json?status=open", "GET", self.setMergeRequests);
         });
     };
     this.setMergeRequests = function(merge_requests){
@@ -80,7 +70,7 @@ var Space = function(data){
                 $("#collapse"+self.id+ " .panel-body .list-group").append('<li class="list-group-item"><span class="badge">{{user-'+merge_request.user_id+'}}</span>'+merge_request.title+'</li>');
                 var foundUser=gitsembla.userSettings.getUserById(merge_request.user_id);
                 if (foundUser===null){
-                    new GitsemblaRequest("https://api.assembla.com/v1/users/"+merge_request.user_id, "GET", self.mergeRequestUserAdd);
+                    new gitsembla.localScope.GitsemblaRequest("https://api.assembla.com/v1/users/"+merge_request.user_id, "GET", self.mergeRequestUserAdd);
                 }else{
                     var r = new RegExp("\{\{user-"+foundUser.id+"\}\}","g");
                     $("#container").html($("#container").html().replace(r, foundUser.name));
@@ -95,13 +85,13 @@ var Space = function(data){
     }
     this.init();
 };
-var Spaces = function (callback){
+gitsembla.localScope["Spaces"] = function (callback){
     var self= this;
     this.callback = callback;
     this.url ="https://api.assembla.com/v1/spaces.json";
     this.obj = null;
     this.get = function(){
-        new GitsemblaRequest (self.url, "GET", self.setup);
+        new gitsembla.localScope.GitsemblaRequest (self.url, "GET", self.setup);
     };
     this.setup= function(data){
         gitsembla.userSettings.spaces=data;
@@ -110,7 +100,7 @@ var Spaces = function (callback){
 
 };
 
-var ViewHtmlReturn = function(view, onViewLoad){
+gitsembla.localScope["ViewHtmlReturn"] = function(view, onViewLoad){
     var self=this;
     this.onViewLoad= onViewLoad;
     this.view = view;
@@ -123,7 +113,7 @@ var ViewHtmlReturn = function(view, onViewLoad){
     };
 };
 
-var View = function(view, container, onViewLoad){
+gitsembla.localScope["View"] = function(view, container, onViewLoad){
     var self=this;
     this.onViewLoad= onViewLoad;
     this.view = view;
@@ -142,14 +132,14 @@ var View = function(view, container, onViewLoad){
  * DOM data helper, get assembla user data
  * @constructor
  */
-var AssemblaForm = function(){
+gitsembla.localScope["AssemblaForm"] = function(){
     var self=this;
     this.getData= function(){
         $("#btn-save-assembla").on("click", function(){
             gitsembla.userSettings.setApiIdentifier($("[name='identifier']").val());
             gitsembla.userSettings.setApiSecret($("[name='secret']").val());
 
-            new SpaceList();
+            new gitsembla.localScope.SpaceList();
 
         });
     };
@@ -160,18 +150,19 @@ var AssemblaForm = function(){
  * DOM data helper, get assembla user data
  * @constructor
  */
-var SpaceList= function(){
+gitsembla.localScope["SpaceList"]= function(){
+
     var self=this;
     this.getData= function(){
-        var spaceObjs =new Spaces();
+        var spaceObjs =new gitsembla.localScope.Spaces();
         spaceObjs.callback=function(){
             for (var spaceKey in gitsembla.userSettings.spaces){
                 if (gitsembla.userSettings.spaces.hasOwnProperty(spaceKey)){
                     var tmpSpace=gitsembla.userSettings.spaces[spaceKey];
                     (function(tmpSpace){
-                        gitsembla.userSettings.spaces[spaceKey]=new Space(tmpSpace);
+                        gitsembla.userSettings.spaces[spaceKey]=new gitsembla.localScope.Space(tmpSpace);
 
-                        var viewHtmlReturn= new ViewHtmlReturn("space.html",function(html){
+                        var viewHtmlReturn= new gitsembla.localScope.ViewHtmlReturn("space.html",function(html){
                             html=html.replace("{{space_title}}",tmpSpace.name);
                             html=html.replace("{{space_id}}",tmpSpace.id);
                             html=html.replace("#accordion-{{space-id}}","#accordion-"+tmpSpace.id);
@@ -194,7 +185,7 @@ var SpaceList= function(){
  * Models
  * @constructor
  */
-var UserSettings = function(){
+gitsembla.localScope["UserSettings"] = function(){
     var self=this;
     this.secret=null;
     this.identifier=null;
@@ -230,8 +221,20 @@ var UserSettings = function(){
     };
 
     this.isIdentified = function(){
-
-
         return (self.getIdentifier()!==null && self.getSecret()!==null);
     }
 };
+
+$(document).ready(function(){
+
+    window['gitsembla'].userSettings = new gitsembla.localScope.UserSettings();
+
+    gitsembla.userSettings.getIdentifier(gitsembla.userSettings.getSecret);
+
+    if (gitsembla.userSettings.isIdentified()!==true){
+        var assemblaForm = new gitsembla.localScope.View("assembla_form.html", "#container", gitsembla.localScope.AssemblaForm);
+        assemblaForm.load();
+    }else{
+        new gitsembla.localScope.SpaceList();
+    }
+});
