@@ -1,15 +1,15 @@
 <div class="panel-group" id="accordion-{{space-id}}">
-    <div class="panel panel-default">
+    <div class="panel">
         <div class="panel-heading">
             <h4 class="panel-title">
                 <a data-toggle="collapse" data-parent="#accordion-{{space-id}}" href="#{{space_id}}">
-                    {{space_title}} - {{space_merge_requests}}
+                    {{space_title}} - <span class="merge_requests_count badge"></span>
                 </a>
             </h4>
         </div>
         <div id="collapseOne" class="panel-collapse collapse in">
             <div class="panel-body">
-                {{space_text}}
+                <ul class="list-group"></ul>
             </div>
         </div>
     </div>

@@ -70,9 +70,14 @@ var Space = function(data){
     };
     this.setMergeRequests = function(merge_requests){
         self.merge_requests=_.union(self.merge_requests, merge_requests);
+        if (self.merge_requests.length>0){
+            $("#accordion-"+self.id+" .panel").addClass("panel-danger").addClass("has_requests");
+            $("#container").prepend($("#accordion-"+self.id))
+        }
+        $("#accordion-"+self.id+ " .merge_requests_count").text(self.merge_requests.length);
         _.each(merge_requests,function(merge_request){
             (function(merge_request){
-                $("#collapse"+self.id+ " .panel-body").append('<ul class="list-group"><li class="list-group-item"><span class="badge">{{user-'+merge_request.user_id+'}}</span>'+merge_request.title+'</li></ul>');
+                $("#collapse"+self.id+ " .panel-body .list-group").append('<li class="list-group-item"><span class="badge">{{user-'+merge_request.user_id+'}}</span>'+merge_request.title+'</li>');
                 var foundUser=gitsembla.userSettings.getUserById(merge_request.user_id);
                 if (foundUser===null){
                     new GitsemblaRequest("https://api.assembla.com/v1/users/"+merge_request.user_id, "GET", self.mergeRequestUserAdd);
@@ -163,7 +168,6 @@ var SpaceList= function(){
             for (var spaceKey in gitsembla.userSettings.spaces){
                 if (gitsembla.userSettings.spaces.hasOwnProperty(spaceKey)){
                     var tmpSpace=gitsembla.userSettings.spaces[spaceKey];
-
                     (function(tmpSpace){
                         gitsembla.userSettings.spaces[spaceKey]=new Space(tmpSpace);
 
@@ -173,9 +177,6 @@ var SpaceList= function(){
                             html=html.replace("#accordion-{{space-id}}","#accordion-"+tmpSpace.id);
                             html=html.replace("accordion-{{space-id}}","accordion-"+tmpSpace.id);
                             html=html.replace("collapseOne","collapse"+tmpSpace.id);
-
-                            html=html.replace("{{space_text}}","");
-                            html=html.replace("{{space_merge_requests}}","");
                             $("#container").append(html);
 
                         });
