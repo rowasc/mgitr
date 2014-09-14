@@ -2,6 +2,8 @@ $(document).ready(function(){
     window['gitsembla']= {};
     window['gitsembla'].userSettings = new UserSettings();
 
+    gitsembla.userSettings.getIdentifier(gitsembla.userSettings.getSecret);
+
     if (gitsembla.userSettings.isIdentified()!==true){
         var assemblaForm = new View("assembla_form.html", "#container", AssemblaForm);
         assemblaForm.load();
@@ -18,8 +20,8 @@ var GitsemblaRequest = function (url, method, callback){
             withCredentials: true
         },
         beforeSend: function( xhr ) {
-            xhr.setRequestHeader("X-Api-Key", gitsembla.userSettings.identifier);
-            xhr.setRequestHeader("X-Api-Secret",gitsembla.userSettings.secret);
+            xhr.setRequestHeader("X-Api-Key", gitsembla.userSettings.getIdentifier());
+            xhr.setRequestHeader("X-Api-Secret",gitsembla.userSettings.getSecret());
         }
     }).done(function( data ) {
         callback(data);
@@ -125,34 +127,28 @@ var UserSettings = function(){
     this.identifier=null;
     this.spaces = [];
     this.setApiSecret=function(secret){
-      chrome.storage.local.set({'assembla_key_secret': secret}, function(data) {
-          // Notify that we saved.
-        self.getSecret();
-      });
+        localStorage.setItem('assembla_key_secret', secret);
+
     };
     this.setApiIdentifier = function(identifier){
-      chrome.storage.local.set({'assembla_key_identifier': identifier}, function(data) {
-          self.getIdentifier();
-      });
+        localStorage.setItem('assembla_key_identifier', identifier);
+
     };
 
     this.getSecret = function(){
+        return localStorage.getItem('assembla_key_secret');
 
-      chrome.storage.local.get("assembla_key_secret", function(data_get){
-
-            self.secret=data_get.assembla_key_secret;
-      });
 
     };
 
     this.getIdentifier = function(){
+        return localStorage.getItem('assembla_key_identifier');
 
-        chrome.storage.local.get("assembla_key_identifier", function(data_get){
-            self.identifier=data_get.assembla_key_identifier;
-        });
     };
 
     this.isIdentified = function(){
-        return (self.secret!==null && self.identifier!==null);
+
+
+        return (self.getIdentifier()!==null && self.getSecret()!==null);
     }
 };
