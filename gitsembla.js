@@ -10,6 +10,7 @@ gitsembla["localScope"]={};
  * @constructor
  */
 gitsembla.localScope["GitsemblaRequest"]= function (url, method, callback){
+    $("#container").prepend('<span class="loading glyphicon glyphicon-cloud">loading...</span>');
     $.ajax({
         url: url,
         xhrFields: {
@@ -20,6 +21,8 @@ gitsembla.localScope["GitsemblaRequest"]= function (url, method, callback){
             xhr.setRequestHeader("X-Api-Secret",gitsembla.userSettings.getSecret());
         }
     }).done(function( data ) {
+        $("#container").find('.loading').fadeOut(1000).remove();
+
         callback(data);
     });
 };
@@ -62,6 +65,7 @@ gitsembla.localScope["Space"] = function(data){
     this.setMergeRequests = function(merge_requests){
         self.merge_requests=_.union(self.merge_requests, merge_requests);
         if (self.merge_requests.length>0){
+            $(".panel-"+self.id).removeClass("hide");
             $(".panel-"+self.id).addClass("panel-danger").addClass("has_requests");
             $("#container").prepend($(".panel-"+self.id))
         }
@@ -153,7 +157,6 @@ gitsembla.localScope["AssemblaForm"] = function(){
  */
 gitsembla.localScope["SpaceList"]= function(){
     $("#container").html('<div class="panel-group" id="accordion"></div>');
-
     var self=this;
     this.getData= function(){
         var spaceObjs =new gitsembla.localScope.Spaces();
@@ -166,7 +169,6 @@ gitsembla.localScope["SpaceList"]= function(){
 
                         var viewHtmlReturn= new gitsembla.localScope.ViewHtmlReturn("space.html",function(html){
                             html=html.replace("{{space_title}}",tmpSpace.name);
-
                             html=html.replace("panel-{{space-id}}","panel-"+tmpSpace.id);
                             html=html.replace("{{space_id}}",tmpSpace.id);
                             html=html.replace("collapseOne","collapse"+tmpSpace.id);

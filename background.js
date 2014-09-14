@@ -21,4 +21,4 @@ setInterval(function(){
     chrome.runtime.sendMessage({msg: "init"}, function(response) {
 
     });
-},1000*60*5);
+},1000*60*60);
