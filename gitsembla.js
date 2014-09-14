@@ -1,5 +1,6 @@
 window['gitsembla']= {};
 gitsembla["localScope"]={};
+
 /**
  *
  * A simple wrapper for an ajax call with assembla headers for auth preloaded
@@ -67,7 +68,7 @@ gitsembla.localScope["Space"] = function(data){
         $(".panel-"+self.id+ " .merge_requests_count").text(self.merge_requests.length);
         _.each(merge_requests,function(merge_request){
             (function(merge_request){
-                $("#collapse"+self.id+ " .panel-body .list-group").append('<li class="list-group-item"><span class="badge">{{user-'+merge_request.user_id+'}}</span>'+merge_request.title+'</li>');
+                $("#collapse"+self.id+ " .panel-body .list-group").append('<li class="list-group-item"><span class="badge">{{user-'+merge_request.user_id+'}}</span><a target="_blank" href="https://www.assembla.com/code/'+self.id+'/git/merge_requests/'+merge_request.id+'">'+merge_request.title+'</a></li>');
                 var foundUser=gitsembla.userSettings.getUserById(merge_request.user_id);
                 if (foundUser===null){
                     new gitsembla.localScope.GitsemblaRequest("https://api.assembla.com/v1/users/"+merge_request.user_id, "GET", self.mergeRequestUserAdd);
