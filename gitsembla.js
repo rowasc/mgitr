@@ -224,21 +224,29 @@ gitsembla.localScope["UserSettings"] = function(){
     };
 
     this.isIdentified = function(){
-        return (self.getIdentifier()!=="undefined" && self.getSecret()!=="undefined");
+        return (self.getIdentifier()!=="undefined" && self.getIdentifier()!==null && self.getSecret()!=="undefined" && self.getSecret()!==null);
     }
 };
 
 $(document).ready(function(){
+    gitsembla.init = function(){
 
-    window['gitsembla'].userSettings = new gitsembla.localScope.UserSettings();
+        window['gitsembla'].userSettings = new gitsembla.localScope.UserSettings();
 
-    gitsembla.userSettings.getIdentifier(gitsembla.userSettings.getSecret);
+        gitsembla.userSettings.getIdentifier(gitsembla.userSettings.getSecret);
 
-    if (gitsembla.userSettings.isIdentified()!==true){
-        var assemblaForm = new gitsembla.localScope.View("assembla_form.html", "#container", gitsembla.localScope.AssemblaForm);
-        assemblaForm.load();
-    }else{
-        new gitsembla.localScope.SpaceList();
-        $("#container").html('<div class="panel-group" id="accordion"></div>');
-    }
+        if (gitsembla.userSettings.isIdentified()!==true){
+            var assemblaForm = new gitsembla.localScope.View("assembla_form.html", "#container", gitsembla.localScope.AssemblaForm);
+            assemblaForm.load();
+        }else{
+            new gitsembla.localScope.SpaceList();
+            $("#container").html('<div class="panel-group" id="accordion"></div>');
+        }
+    };
+    gitsembla.init();
+    chrome.runtime.onMessage.addListener(
+        function(request, sender, sendResponse) {
+            if (request.msg == "init")
+                gitsembla.init();
+    });
 });
