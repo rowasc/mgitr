@@ -61,10 +61,10 @@ gitsembla.localScope["Space"] = function(data){
     this.setMergeRequests = function(merge_requests){
         self.merge_requests=_.union(self.merge_requests, merge_requests);
         if (self.merge_requests.length>0){
-            $("#accordion-"+self.id+" .panel").addClass("panel-danger").addClass("has_requests");
-            $("#container").prepend($("#accordion-"+self.id))
+            $(".panel-"+self.id).addClass("panel-danger").addClass("has_requests");
+            $("#container").prepend($(".panel-"+self.id))
         }
-        $("#accordion-"+self.id+ " .merge_requests_count").text(self.merge_requests.length);
+        $(".panel-"+self.id+ " .merge_requests_count").text(self.merge_requests.length);
         _.each(merge_requests,function(merge_request){
             (function(merge_request){
                 $("#collapse"+self.id+ " .panel-body .list-group").append('<li class="list-group-item"><span class="badge">{{user-'+merge_request.user_id+'}}</span>'+merge_request.title+'</li>');
@@ -136,6 +136,7 @@ gitsembla.localScope["AssemblaForm"] = function(){
     var self=this;
     this.getData= function(){
         $("#btn-save-assembla").on("click", function(){
+            $("#container").html('<div class="panel-group" id="accordion"></div>');
             gitsembla.userSettings.setApiIdentifier($("[name='identifier']").val());
             gitsembla.userSettings.setApiSecret($("[name='secret']").val());
 
@@ -164,10 +165,11 @@ gitsembla.localScope["SpaceList"]= function(){
 
                         var viewHtmlReturn= new gitsembla.localScope.ViewHtmlReturn("space.html",function(html){
                             html=html.replace("{{space_title}}",tmpSpace.name);
+
+                            html=html.replace("panel-{{space-id}}","panel-"+tmpSpace.id);
                             html=html.replace("{{space_id}}",tmpSpace.id);
-                            html=html.replace("#accordion-{{space-id}}","#accordion-"+tmpSpace.id);
-                            html=html.replace("accordion-{{space-id}}","accordion-"+tmpSpace.id);
                             html=html.replace("collapseOne","collapse"+tmpSpace.id);
+                            html=html.replace("collapse{{space_id}}","collapse"+tmpSpace.id);
                             $("#container").append(html);
 
                         });
@@ -236,5 +238,6 @@ $(document).ready(function(){
         assemblaForm.load();
     }else{
         new gitsembla.localScope.SpaceList();
+        $("#container").html('<div class="panel-group" id="accordion"></div>');
     }
 });
