@@ -137,7 +137,6 @@ gitsembla.localScope["AssemblaForm"] = function(){
     var self=this;
     this.getData= function(){
         $("#btn-save-assembla").on("click", function(){
-            $("#container").html('<div class="panel-group" id="accordion"></div>');
             gitsembla.userSettings.setApiIdentifier($("[name='identifier']").val());
             gitsembla.userSettings.setApiSecret($("[name='secret']").val());
 
@@ -153,6 +152,7 @@ gitsembla.localScope["AssemblaForm"] = function(){
  * @constructor
  */
 gitsembla.localScope["SpaceList"]= function(){
+    $("#container").html('<div class="panel-group" id="accordion"></div>');
 
     var self=this;
     this.getData= function(){
@@ -224,7 +224,7 @@ gitsembla.localScope["UserSettings"] = function(){
     };
 
     this.isIdentified = function(){
-        return (self.getIdentifier()!==null && self.getSecret()!==null);
+        return (self.getIdentifier()!=="undefined" && self.getSecret()!=="undefined");
     }
 };
 
