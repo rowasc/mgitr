@@ -32,6 +32,7 @@ var Space = function (callback){
     var self= this;
     this.callback = callback;
     this.url ="https://api.assembla.com/v1/spaces.json";
+    this.obj = null;
     this.get = function(){
         new GitsemblaRequest (self.url, "GET", self.setup);
     };
@@ -39,6 +40,9 @@ var Space = function (callback){
         gitsembla.userSettings.spaces=data;
         self.callback();
     };
+
+
+
 
 };
 
@@ -99,15 +103,20 @@ var SpaceList= function(){
         s.callback=function(){
             for (var spaceKey in gitsembla.userSettings.spaces){
                 if (gitsembla.userSettings.spaces.hasOwnProperty(spaceKey)){
+
                     var tmpSpace=gitsembla.userSettings.spaces[spaceKey];
                     (function(tmpSpace){
                         var v= new ViewHtmlReturn("space.html",function(html){
-                            html=html.replace(/\{\{space_title\}\}/g,tmpSpace.name);
-                            html=html.replace(/\{\{{{space_text}}\}\}/g,"");
-                            html=html.replace(/\{\{{{space_merge_requests}}\}\}/g,"");
+                            html=html.replace("{{space_title}}",tmpSpace.name);
+                            html=html.replace("{{space_id}}",tmpSpace.id);
+                            html=html.replace("#accordion-{{space-id}}","#accordion-"+tmpSpace.id);
+                            html=html.replace("accordion-{{space-id}}","accordion-"+tmpSpace.id);
+                            html=html.replace("{{space_text}}","");
+                            html=html.replace("{{space_merge_requests}}","");
                             $("#container").append(html);
                         });
                         v.load();
+
                     })(tmpSpace);
                 }
             }
