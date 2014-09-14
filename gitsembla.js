@@ -28,12 +28,14 @@ var GitsemblaRequest = function (url, method, callback){
 
 var Space = function (callback){
     var self= this;
+    this.callback = callback;
     this.url ="https://api.assembla.com/v1/spaces.json";
     this.get = function(){
         new GitsemblaRequest (self.url, "GET", self.setup);
     };
     this.setup= function(data){
         gitsembla.userSettings.spaces=data;
+        self.callback();
     };
 
 };
@@ -77,7 +79,7 @@ var AssemblaForm = function(){
             gitsembla.userSettings.setApiIdentifier($("[name='identifier']").val());
             gitsembla.userSettings.setApiSecret($("[name='secret']").val());
 
-            new Space(SpaceList).get();
+            new SpaceList();
 
         });
     };
@@ -91,18 +93,25 @@ var AssemblaForm = function(){
 var SpaceList= function(){
     var self=this;
     this.getData= function(){
-        new Space().get(function(){
+        var s =new Space();
+        s.callback=function(){
             for (var spaceKey in gitsembla.userSettings.spaces){
                 if (gitsembla.userSettings.spaces.hasOwnProperty(spaceKey)){
-                    new ViewHtmlReturn("space.html",function(html){
-                        html=html.replace(/\{\{space_title\}\}/g, gitsembla.userSettings.spaces[spaceKey].name);
-                        html=html.replace(/\{\{{{space_text}}\}\}/g,"");
-                        html=html.replace(/\{\{{{space_merge_requests}}\}\}/g,"");
-                        $("#container").append(html);
-                    });
+                    var tmpSpace=gitsembla.userSettings.spaces[spaceKey];
+                    (function(tmpSpace){
+                        var v= new ViewHtmlReturn("space.html",function(html){
+                            html=html.replace(/\{\{space_title\}\}/g,tmpSpace.name);
+                            html=html.replace(/\{\{{{space_text}}\}\}/g,"");
+                            html=html.replace(/\{\{{{space_merge_requests}}\}\}/g,"");
+                            $("#container").append(html);
+                        });
+                        v.load();
+                    })(tmpSpace);
                 }
             }
-        });
+        };
+        s.get();
+
     };
     this.getData();
 };
