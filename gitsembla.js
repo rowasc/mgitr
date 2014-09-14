@@ -10,9 +10,15 @@ $(document).ready(function(){
     }else{
         new SpaceList();
     }
-
 });
-
+/**
+ *
+ * A simple wrapper for an ajax call with assembla headers for auth preloaded
+ * @param url
+ * @param method
+ * @param callback
+ * @constructor
+ */
 var GitsemblaRequest = function (url, method, callback){
     $.ajax({
         url: url,
@@ -27,8 +33,64 @@ var GitsemblaRequest = function (url, method, callback){
         callback(data);
     });
 };
+var Space = function(data){
+    var self=this;
+    this.id=data.id;
+    this.name = data.name;
+    this.merge_requests=[];
+    this.tools=[];
+    this.users=[];
 
-var Space = function (callback){
+    this.mergeRequestUserAdd = function(user){
+        gitsembla.userSettings.users.push(user);
+        var r = new RegExp("\{\{user-"+user.id+"\}\}","g");
+        $("#container").html($("#container").html().replace(r, user.name));
+
+    };
+    this.getTools= function(){
+        new GitsemblaRequest("https://api.assembla.com/v1/spaces/"+self.id+"/space_tools.json", "GET", self.setTools);
+    };
+
+    this.setTools =function(data){
+        self.tools=data;
+        self.getMergeRequests();
+    };
+
+    this.init = function(){
+        self.getTools();
+    };
+
+    this.getMergeRequests  = function(){
+        var git_tools= _.filter(self.tools, function(tool){
+            return tool.type==="GitTool";
+        });
+        _.each(git_tools, function(tool){
+            new GitsemblaRequest("https://api.assembla.com/v1/spaces/"+self.id+"/space_tools/"+tool.id+"/merge_requests.json?status=open", "GET", self.setMergeRequests);
+        });
+    };
+    this.setMergeRequests = function(merge_requests){
+        self.merge_requests=_.union(self.merge_requests, merge_requests);
+        _.each(merge_requests,function(merge_request){
+            (function(merge_request){
+                $("#collapse"+self.id+ " .panel-body").append('<ul class="list-group"><li class="list-group-item"><span class="badge">{{user-'+merge_request.user_id+'}}</span>'+merge_request.title+'</li></ul>');
+                var foundUser=gitsembla.userSettings.getUserById(merge_request.user_id);
+                if (foundUser===null){
+                    new GitsemblaRequest("https://api.assembla.com/v1/users/"+merge_request.user_id, "GET", self.mergeRequestUserAdd);
+                }else{
+                    var r = new RegExp("\{\{user-"+foundUser.id+"\}\}","g");
+                    $("#container").html($("#container").html().replace(r, foundUser.name));
+                }
+            })(merge_request);
+
+
+        });
+    }
+    this.addUser = function(user){
+        self.users.push(user);
+    }
+    this.init();
+};
+var Spaces = function (callback){
     var self= this;
     this.callback = callback;
     this.url ="https://api.assembla.com/v1/spaces.json";
@@ -40,9 +102,6 @@ var Space = function (callback){
         gitsembla.userSettings.spaces=data;
         self.callback();
     };
-
-
-
 
 };
 
@@ -99,29 +158,33 @@ var AssemblaForm = function(){
 var SpaceList= function(){
     var self=this;
     this.getData= function(){
-        var s =new Space();
-        s.callback=function(){
+        var spaceObjs =new Spaces();
+        spaceObjs.callback=function(){
             for (var spaceKey in gitsembla.userSettings.spaces){
                 if (gitsembla.userSettings.spaces.hasOwnProperty(spaceKey)){
-
                     var tmpSpace=gitsembla.userSettings.spaces[spaceKey];
+
                     (function(tmpSpace){
-                        var v= new ViewHtmlReturn("space.html",function(html){
+                        gitsembla.userSettings.spaces[spaceKey]=new Space(tmpSpace);
+
+                        var viewHtmlReturn= new ViewHtmlReturn("space.html",function(html){
                             html=html.replace("{{space_title}}",tmpSpace.name);
                             html=html.replace("{{space_id}}",tmpSpace.id);
                             html=html.replace("#accordion-{{space-id}}","#accordion-"+tmpSpace.id);
                             html=html.replace("accordion-{{space-id}}","accordion-"+tmpSpace.id);
+                            html=html.replace("collapseOne","collapse"+tmpSpace.id);
+
                             html=html.replace("{{space_text}}","");
                             html=html.replace("{{space_merge_requests}}","");
                             $("#container").append(html);
-                        });
-                        v.load();
 
+                        });
+                        viewHtmlReturn.load();
                     })(tmpSpace);
                 }
             }
         };
-        s.get();
+        spaceObjs.get();
 
     };
     this.getData();
@@ -135,9 +198,19 @@ var UserSettings = function(){
     this.secret=null;
     this.identifier=null;
     this.spaces = [];
+    this.users = [];
+    this.getUserById = function (user_id){
+        var found= _.find(self.users, function(user){
+            return user.id ==user_id;
+        });
+        if (typeof(found)=="undefined" || found==null){
+            return null;
+        }else{
+            return found;
+        }
+    };
     this.setApiSecret=function(secret){
         localStorage.setItem('assembla_key_secret', secret);
-
     };
     this.setApiIdentifier = function(identifier){
         localStorage.setItem('assembla_key_identifier', identifier);
